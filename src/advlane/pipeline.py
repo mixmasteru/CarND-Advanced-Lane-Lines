@@ -1,5 +1,8 @@
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
+from advlane.curve import Curve
+from advlane.warper import Warper
 
 
 class Pipeline:
@@ -8,6 +11,7 @@ class Pipeline:
     def __init__(self, mtx, dist):
         self.mtx = mtx
         self.dist = dist
+        self.curve = Curve()
 
     def abs_sobel_thresh(self, gray, orient='x', thresh=(0, 255)):
         if orient == 'x':
@@ -47,32 +51,8 @@ class Pipeline:
         dir_binary[(absgraddir >= thresh[0]) & (absgraddir <= thresh[1])] = 1
         return dir_binary
 
-    def warp_img(self, image):
-        # height, width, channels = img.shape
-        vertices = np.array([[(200, image.shape[0]),
-                              (int(image.shape[1] / 2) - 60, int(image.shape[0] / 2) + 100),
-                              (int(image.shape[1] / 2) + 60, int(image.shape[0] / 2) + 100),
-                              (image.shape[1] - 150, image.shape[0])]], dtype=np.int32)
-
-        src = np.float32([[200, image.shape[0]],
-                          [int(image.shape[1] / 2) - 60, int(image.shape[0] / 2) + 100],
-                          [int(image.shape[1] / 2) + 60, int(image.shape[0] / 2) + 100],
-                          [image.shape[1] - 150, image.shape[0]], ])
-        xr = 300
-        xl = 300
-        dst = np.float32([[xr, image.shape[0]],
-                          [xr, 0],
-                          [image.shape[1] - xl, 0],
-                          [image.shape[1] - xl, image.shape[0]]])
-        # d) use cv2.getPerspectiveTransform() to get M, the transform matrix
-        M = cv2.getPerspectiveTransform(src, dst)
-        # e) use cv2.warpPerspective() to warp your image to a top-down view
-        warped = cv2.warpPerspective(image, M, (image.shape[1], image.shape[0]), flags=cv2.INTER_LINEAR)
-
-        lines = cv2.polylines(image, vertices, True, (255, 120, 255), 3)
-        return warped
-
     def process_img(self, image):
+
         image = cv2.undistort(image, self.mtx, self.dist, None, self.mtx)
         gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
         hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
@@ -88,5 +68,21 @@ class Pipeline:
         out = np.zeros_like(dir_binary)
         out[((gradx == 1) & (grady == 1)) | ((mag_binary == 1) & (dir_binary == 0))] = 1
 
-        out = self.warp_img(out)
+        points, warped = Warper.warp_img(out)
+        plt.imshow(warped, cmap='gray')
+        plt.show()
+
+        frames, left_fit, right_fit = self.curve.fit_polynomial(warped)
+        left_curverad, right_curverad = self.curve.measure_curvature(left_fit, right_fit)
+        print(left_curverad)
+        print(right_curverad)
+        lines, left_fit, right_fit = self.curve.search_around_poly(warped, left_fit, right_fit)
+        left_curverad, right_curverad = self.curve.measure_curvature(left_fit, right_fit)
+        print(left_curverad)
+        print(right_curverad)
+
+        plt.imshow(lines)
+        plt.show()
+
+
         return out

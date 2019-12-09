@@ -17,7 +17,7 @@ pipeline = Pipeline(mtx, dist)
 
 
 fname = path + '/../assets/test_images/test1.jpg'
-fname = path + '/../assets/test_images/straight_lines1.jpg'
+#fname = path + '/../assets/test_images/straight_lines1.jpg'
 image = cv2.imread(fname)
 
 plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
@@ -25,5 +25,5 @@ plt.show()
 
 img = pipeline.process_img(image)
 
-plt.imshow(img, cmap="gray")
-plt.show()
+#plt.imshow(img, cmap="gray")
+#plt.show()
