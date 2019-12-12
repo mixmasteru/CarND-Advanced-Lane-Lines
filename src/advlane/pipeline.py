@@ -1,7 +1,8 @@
 import cv2
-import numpy as np
 import matplotlib.pyplot as plt
-from advlane.curve import Curve
+import numpy as np
+
+from advlane.lanes import Lanes
 from advlane.warper import Warper
 
 
@@ -11,7 +12,7 @@ class Pipeline:
     def __init__(self, mtx, dist):
         self.mtx = mtx
         self.dist = dist
-        self.curve = Curve()
+        self.lanes = Lanes()
 
     def abs_sobel_thresh(self, gray, orient='x', thresh=(0, 255)):
         if orient == 'x':
@@ -51,9 +52,9 @@ class Pipeline:
         dir_binary[(absgraddir >= thresh[0]) & (absgraddir <= thresh[1])] = 1
         return dir_binary
 
-    def process_img(self, image):
+    def process_img(self, image_org):
 
-        image = cv2.undistort(image, self.mtx, self.dist, None, self.mtx)
+        image = cv2.undistort(image_org, self.mtx, self.dist, None, self.mtx)
         gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
         hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
         l_channel = hls[:, :, 1]
@@ -66,23 +67,22 @@ class Pipeline:
         dir_binary = self.dir_threshold(s_channel, thresh=(0.7, 1.3))
 
         out = np.zeros_like(dir_binary)
-        out[((gradx == 1) & (grady == 1)) | ((mag_binary == 1) & (dir_binary == 0))] = 1
+        out[((grady == 1) & (gradx == 1)) | ((mag_binary == 1) & (dir_binary == 0))] = 1
 
         points, warped = Warper.warp_img(out)
-        plt.imshow(warped, cmap='gray')
+        plt.imshow(out, cmap='gray')
         plt.show()
 
-        frames, left_fit, right_fit = self.curve.fit_polynomial(warped)
-        left_curverad, right_curverad = self.curve.measure_curvature(left_fit, right_fit)
-        print(left_curverad)
-        print(right_curverad)
-        lines, left_fit, right_fit = self.curve.search_around_poly(warped, left_fit, right_fit)
-        left_curverad, right_curverad = self.curve.measure_curvature(left_fit, right_fit)
-        print(left_curverad)
-        print(right_curverad)
-
-        plt.imshow(lines)
+        out_img, left_fit, right_fit = self.lanes.fit_polynomial(warped)
+        plt.imshow(out_img, cmap='gray')
         plt.show()
 
+        left_curverad, right_curverad = self.lanes.measure_curvature()
+        print(left_curverad)
+        print(right_curverad)
+        left_fitx, right_fitx, ploty = self.lanes.search_around_poly(warped)
+        left_curverad, right_curverad = self.lanes.measure_curvature()
+        print(left_curverad)
+        print(right_curverad)
 
-        return out
+        return image_org
