@@ -10,6 +10,7 @@ class Lanes:
         self.margin = 100
         self.last_left_fit = None
         self.last_right_fit = None
+        self.last_ploty = None
 
     def measure_curvature(self):
         # Define conversions in x and y from pixels space to meters
@@ -22,7 +23,8 @@ class Lanes:
         y_eval = 720
 
         # Calculation of R_curve (radius of curvature)
-        left_curverad = ((1 + (2 * self.last_left_fit[0] * y_eval * ym_per_pix + self.last_left_fit[1]) ** 2) ** 1.5) / np.absolute(
+        left_curverad = ((1 + (2 * self.last_left_fit[0] * y_eval * ym_per_pix + self.last_left_fit[
+            1]) ** 2) ** 1.5) / np.absolute(
             2 * self.last_left_fit[0])
         right_curverad = ((1 + (
                 2 * self.last_right_fit[0] * y_eval * ym_per_pix + self.last_right_fit[1]) ** 2) ** 1.5) / np.absolute(
@@ -34,11 +36,13 @@ class Lanes:
         self.last_left_fit = np.polyfit(lefty, leftx, 2)
         self.last_right_fit = np.polyfit(righty, rightx, 2)
         # Generate x and y values for plotting
-        ploty = np.linspace(0, img_shape[0] - 1, img_shape[0])
-        left_fitx = self.last_left_fit[0] * ploty ** 2 + self.last_left_fit[1] * ploty + self.last_left_fit[2]
-        right_fitx = self.last_right_fit[0] * ploty ** 2 + self.last_right_fit[1] * ploty + self.last_right_fit[2]
+        self.last_ploty = np.linspace(0, img_shape[0] - 1, img_shape[0])
+        left_fitx = self.last_left_fit[0] * self.last_ploty ** 2 + self.last_left_fit[1] * self.last_ploty + \
+                    self.last_left_fit[2]
+        right_fitx = self.last_right_fit[0] * self.last_ploty ** 2 + self.last_right_fit[1] * self.last_ploty + \
+                     self.last_right_fit[2]
 
-        return left_fitx, right_fitx, ploty
+        return left_fitx, right_fitx, self.last_ploty
 
     def search_around_poly(self, binary_warped):
         # Grab activated pixels
@@ -47,15 +51,17 @@ class Lanes:
         nonzerox = np.array(nonzero[1])
 
         left_lane_inds = (
-                (nonzerox > (self.last_left_fit[0] * (nonzeroy ** 2) + self.last_left_fit[1] * nonzeroy + self.last_left_fit[2] - self.margin)) & (
-                nonzerox < (self.last_left_fit[0] * (nonzeroy ** 2) +
-                            self.last_left_fit[1] * nonzeroy + self.last_left_fit[
-                                2] + self.margin)))
+                (nonzerox > (self.last_left_fit[0] * (nonzeroy ** 2) + self.last_left_fit[1] * nonzeroy +
+                             self.last_left_fit[2] - self.margin)) & (
+                        nonzerox < (self.last_left_fit[0] * (nonzeroy ** 2) +
+                                    self.last_left_fit[1] * nonzeroy + self.last_left_fit[
+                                        2] + self.margin)))
         right_lane_inds = (
-                (nonzerox > (self.last_right_fit[0] * (nonzeroy ** 2) + self.last_right_fit[1] * nonzeroy + self.last_right_fit[2] - self.margin)) & (
-                nonzerox < (self.last_right_fit[0] * (nonzeroy ** 2) +
-                            self.last_right_fit[1] * nonzeroy + self.last_right_fit[
-                                2] + self.margin)))
+                (nonzerox > (self.last_right_fit[0] * (nonzeroy ** 2) + self.last_right_fit[1] * nonzeroy +
+                             self.last_right_fit[2] - self.margin)) & (
+                        nonzerox < (self.last_right_fit[0] * (nonzeroy ** 2) +
+                                    self.last_right_fit[1] * nonzeroy + self.last_right_fit[
+                                        2] + self.margin)))
 
         # Again, extract left and right line pixel positions
         leftx = nonzerox[left_lane_inds]
@@ -206,7 +212,8 @@ class Lanes:
         out_img[righty, rightx] = [0, 0, 255]
 
         # Plots the left and right polynomials on the lane lines
-        plt.plot(left_fitx, ploty, color='yellow')
-        plt.plot(right_fitx, ploty, color='yellow')
+        # plt.plot(left_fitx, ploty, color='yellow')
+        # plt.plot(right_fitx, ploty, color='yellow')
+        # plt.show()
 
         return out_img, left_fit, right_fit

@@ -85,4 +85,19 @@ class Pipeline:
         print(left_curverad)
         print(right_curverad)
 
-        return image_org
+        add_lines = np.zeros_like(image_org)
+        draw_x = np.polyval(self.lanes.last_left_fit, self.lanes.last_ploty)  # evaluate the polynomial
+        draw_points_l = np.asarray([draw_x, ploty]).T.astype(np.int32)  # needs to be int32 and transposed
+
+        draw_x = np.polyval(self.lanes.last_right_fit, self.lanes.last_ploty)  # evaluate the polynomial
+        draw_points_r = np.asarray([draw_x, ploty]).T.astype(np.int32)  # needs to be int32 and transposed
+        top = np.asarray([draw_points_l[0], draw_points_r[0]])
+        bottom = np.asarray([draw_points_l[-1], draw_points_r[-1]])
+        pts = np.concatenate((draw_points_r, np.flip(draw_points_l, 0)), axis=0)
+        #cv2.polylines(add_lines, [pts], True, (0, 255, 0), 3)  # args: image, points, closed, color
+        cv2.fillPoly(add_lines, [pts], (0, 255, 0))
+        add_lines = Warper.unwarp_img(add_lines)
+
+        result = cv2.addWeighted(image_org, 1, add_lines, 0.7, 0)
+
+        return result
