@@ -1,6 +1,7 @@
 import glob
 import os
 import pickle
+import matplotlib.pyplot as plt
 
 import cv2
 from moviepy.editor import VideoFileClip
