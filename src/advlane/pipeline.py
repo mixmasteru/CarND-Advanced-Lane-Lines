@@ -1,5 +1,4 @@
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 
 from advlane.filter import Filter
@@ -44,18 +43,26 @@ class Pipeline:
     def process_img(self, image_org):
         self.warper = Warper(image_org.shape)
         image = cv2.undistort(image_org, self.mtx, self.dist, None, self.mtx)
+        # plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        # plt.show()
         filtered = self.filter.filter_lanes(image)
         warped = self.warper.warp(filtered)
-        plt.imshow(filtered, cmap='gray')
-        plt.show()
+        # plt.imshow(filtered, cmap='gray')
+        # plt.show()
+        # plt.imshow(warped, cmap='gray')
+        # plt.show()
 
-        out_img, left_fit, right_fit = self.lanes.fit_polynomial(warped)
-        plt.imshow(out_img, cmap='gray')
-        plt.show()
-
-        self.lanes.search_around_poly(warped)
+        if self.lanes.last_left_fit is None:
+            out_img = self.lanes.fit_polynomial(warped)
+            # plt.imshow(out_img, cmap='gray')
+            # plt.show()
+        else:
+            self.lanes.search_around_poly(warped)
 
         add_lines = self.draw_data(image_org)
+        # plt.imshow(cv2.cvtColor(add_lines, cv2.COLOR_BGR2RGB))
+        # plt.show()
         result = cv2.addWeighted(image_org, 1, add_lines, 0.7, 0)
+
         result = self.add_info(result)
         return result

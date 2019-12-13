@@ -102,7 +102,7 @@ class Lanes:
         plt.show()
         ## End visualization steps ##
 
-        return left_fitx, right_fitx, ploty
+        return result
 
     def find_lane_pixels(self, binary_warped):
         # Take a histogram of the bottom half of the image
@@ -214,4 +214,4 @@ class Lanes:
         # plt.plot(right_fitx, ploty, color='yellow')
         # plt.show()
 
-        return out_img, left_fit, right_fit
+        return out_img
