@@ -59,10 +59,10 @@ class Pipeline:
         else:
             self.lanes.search_around_poly(warped)
 
-        add_lines = self.draw_data(image_org)
+        add_lines = self.draw_data(image)
         # plt.imshow(cv2.cvtColor(add_lines, cv2.COLOR_BGR2RGB))
         # plt.show()
-        result = cv2.addWeighted(image_org, 1, add_lines, 0.7, 0)
+        result = cv2.addWeighted(image, 1, add_lines, 0.7, 0)
 
         result = self.add_info(result)
         return result

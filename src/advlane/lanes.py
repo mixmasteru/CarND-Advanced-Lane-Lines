@@ -96,10 +96,10 @@ class Lanes:
         result = cv2.addWeighted(out_img, 1, window_img, 0.3, 0)
 
         # Plot the polynomial lines onto the image
-        plt.imshow(binary_warped)
-        plt.plot(left_fitx, ploty, color='yellow')
-        plt.plot(right_fitx, ploty, color='yellow')
-        plt.show()
+        # plt.imshow(binary_warped)
+        # plt.plot(left_fitx, ploty, color='yellow')
+        # plt.plot(right_fitx, ploty, color='yellow')
+         #plt.show()
         ## End visualization steps ##
 
         return result
